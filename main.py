@@ -7,7 +7,6 @@ from apscheduler.triggers.cron import CronTrigger
 from dotenv import load_dotenv
 import os
 
-# Загрузка переменных из .env
 load_dotenv()
 TOKEN = os.getenv("TELEGRAM_TOKEN")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
@@ -15,13 +14,10 @@ WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 bot = telebot.TeleBot(TOKEN)
 scheduler = BackgroundScheduler()
 
-# Файл для хранения chat_id
 CHAT_ID_FILE = 'chat_id.json'
 
 
-# Функции для работы с файлом chat_id
 def load_chat_id():
-    """Загружает chat_id из файла, если он существует."""
     try:
         with open(CHAT_ID_FILE, 'r') as file:
             data = json.load(file)
@@ -31,15 +27,12 @@ def load_chat_id():
 
 
 def save_chat_id(chat_id):
-    """Сохраняет chat_id в файл."""
     with open(CHAT_ID_FILE, 'w') as file:
         json.dump({"chat_id": chat_id}, file)
 
 
-# Загрузка chat_id при запуске
 chat_id = load_chat_id()
 
-# Настройка клавиатуры с кнопками
 menu_keyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
 menu_keyboard.row("Начать рабочий день", "Завершить рабочий день")
 
@@ -70,7 +63,6 @@ def end_workday():
             bot.send_message(chat_id=chat_id, text="Ошибка при завершении рабочего дня", reply_markup=menu_keyboard)
 
 
-# Напоминание о начале рабочего дня
 def check_start_reminder():
     if chat_id:
         response = requests.get(f"{WEBHOOK_URL}/timeman.status")
@@ -79,7 +71,6 @@ def check_start_reminder():
             bot.send_message(chat_id=chat_id, text="Напоминание: Начните рабочий день", reply_markup=menu_keyboard)
 
 
-# Напоминание о завершении рабочего дня
 def check_end_reminder():
     if chat_id:
         response = requests.get(f"{WEBHOOK_URL}/timeman.status")
@@ -88,7 +79,6 @@ def check_end_reminder():
             bot.send_message(chat_id=chat_id, text="Напоминание: Завершите рабочий день", reply_markup=menu_keyboard)
 
 
-# Команда /start
 @bot.message_handler(commands=['start'])
 def handle_start_command(message):
     global chat_id
@@ -97,13 +87,11 @@ def handle_start_command(message):
     bot.send_message(chat_id, "Бот готов к работе. Вы можете начинать рабочий день.", reply_markup=menu_keyboard)
 
 
-# Команда начала рабочего дня
 @bot.message_handler(func=lambda message: message.text.lower() == "начать рабочий день")
 def handle_start(message):
     start_workday()
 
 
-# Команда завершения рабочего дня
 @bot.message_handler(func=lambda message: message.text.lower() == "завершить рабочий день")
 def handle_end(message):
     end_workday()
